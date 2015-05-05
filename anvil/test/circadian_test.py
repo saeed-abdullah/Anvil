@@ -13,15 +13,15 @@ from anvil import circadian
 import unittest
 
 
-class CircadianAnalysisTest(unittest2.TestCase):
+class CircadianAnalysisTest(unittest.TestCase):
     def test_inter_daily_stabilit(self):
-        pass
+        raise NotImplementedError
 
     def test_inter_daily_variability(self):
-        pass
+        raise NotImplementedError
 
     def test_sort_by_hourly_values(self):
-        pass
+        raise NotImplementedError
 
     def test_calculate_srm(self):
-        pass
+        raise NotImplementedError
