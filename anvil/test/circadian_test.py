@@ -10,7 +10,7 @@
 """
 
 from anvil import circadian
-import unittest2
+import unittest
 
 
 class CircadianAnalysisTest(unittest2.TestCase):
