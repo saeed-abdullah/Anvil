@@ -52,3 +52,46 @@ class Utils(object):
             df = df.tz_localize(should_localize)
 
         return df.tz_convert(to_timezone)
+
+    @staticmethod
+    def get_df_slices(df, sorted_slices):
+        """
+        Gets DataFrame slices.
+
+        This function performs advanced indexing
+        of DataFrame based on given slices. For
+        every two consecutive elements in the slice,
+        the index is compared:
+        slice[i] <= index < slice[i + 1] and matching
+        rows are returned.
+
+        For example, this function can be used to group
+        rows in same week by having a DataFrame with
+        `DateTimeIndex` and slices containing DateTime
+        elements 7 days apart.
+
+        Parameters
+        ----------
+
+        df: DataFrame.
+        sorted_slices: List of sorted (ascending) slicing
+                       elements which are comparable against
+                       DataFrame index.
+
+
+        Returns
+        -------
+        Generator producing list of rows.
+
+        Notes
+        -----
+
+        Slice elements must be sorted (ascending) and comparable
+        against index of DataFrame.
+
+        """
+
+        for index in range(0, len(sorted_slices) - 1):
+            s = sorted_slices[index]
+            e = sorted_slices[index + 1]
+            yield df[df.index.map(lambda z:  z >= s and z < e)]
