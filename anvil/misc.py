@@ -14,9 +14,9 @@ import pandas as pd
 class Utils(object):
 
     @staticmethod
-    def _convert_time_zone(df, column_name=None, should_localize='UTC',
-                           sort_index=True,
-                           to_timezone='America/New_York'):
+    def convert_time_zone(df, column_name=None, should_localize='UTC',
+                          sort_index=True,
+                          to_timezone='America/New_York'):
         """
         Converts a DataFrame to specified timezone.
 
