@@ -21,3 +21,13 @@ __pycache__
 
 # Ignore generated docs
 docs/_build/
+
+# JetBrains IDE
+*.iml
+.idea/
+
+## File-based project format:
+*.ipr
+*.iws
+
+
