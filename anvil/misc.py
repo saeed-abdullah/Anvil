@@ -95,3 +95,41 @@ class Utils(object):
             s = sorted_slices[index]
             e = sorted_slices[index + 1]
             yield df[df.index.map(lambda z:  z >= s and z < e)]
+
+    @staticmethod
+    def outlier_filtering(df, filtering_col,
+                          filtering_factor=1.5,
+                          is_recursive=True):
+        """
+        Filters outlier from the given DataFrame.
+
+        The threshold value is determined as mean ± filtering_factor * SD.
+        Any row with value greater or less than the threshold in filtering
+        column is removed.
+
+        :param df: DataFrame.
+        :param filtering_col: Filtering column. It should contain comparable
+                              values
+        :param filtering_factor: Filtering factor. This determines the
+                                 threshold window width. Default is 1.5.
+        :param is_recursive: If the filtering should be recursively applied
+                             until all values are consistent. Default is True.
+        :return: A filtered DataFrame.
+        """
+
+        col = df[filtering_col]
+        threshold = col.std() * filtering_factor
+        min_val, max_val = col.mean() - threshold, col.mean() + threshold
+
+        df2 = df[col.map(lambda z: min_val < z < max_val)]
+
+        if is_recursive:
+            # Check if all the values are consistent (no filtering would
+            # happen in that case)
+            if len(df) == len(df2):
+                return df2
+            else:
+                return Utils.outlier_filtering(df2, filtering_col,
+                                               filtering_factor, is_recursive)
+        else:
+            return df2
