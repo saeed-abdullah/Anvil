@@ -96,32 +96,53 @@ class Utils(object):
             e = sorted_slices[index + 1]
             yield df[df.index.map(lambda z:  z >= s and z < e)]
 
+
+    @staticmethod
+    def _sd_based_outlier_filtering(col, factor=1.5):
+        """
+        Performs SD based outlier filtering.
+
+        It uses mean ± factor * SD as the threshold window. Any values
+        outside of the window is considered as outlier.
+
+        To use with different window size in outlier_filtering,
+        `functools.partial` might be useful.
+
+        :param col: Filtering column.
+        :param factor: Threshold window size. Default is 1.5.
+        :return: A Boolean Series where False indicates outlier values.
+        """
+
+        threshold = col.std() * factor
+        min_val, max_val = col.mean() - threshold, col.mean() + threshold
+        return col.map(lambda z: min_val < z < max_val)
+
     @staticmethod
     def outlier_filtering(df, filtering_col,
-                          filtering_factor=1.5,
+                          filtering_f,
                           is_recursive=True):
         """
         Filters outlier from the given DataFrame.
 
-        The threshold value is determined as mean ± filtering_factor * SD.
-        Any row with value greater or less than the threshold in filtering
-        column is removed.
+        The filtering function takes the column as input and returns
+        Boolean value for each row. Only rows with True values
+        are retained.
 
         :param df: DataFrame.
         :param filtering_col: Filtering column. It should contain comparable
                               values
-        :param filtering_factor: Filtering factor. This determines the
-                                 threshold window width. Default is 1.5.
+        :param filtering_f: Filtering function. This function should take
+                            the filtering column and return Boolean value
+                            for each row with `False` values indicating outliers
+                            that should be discarded.
         :param is_recursive: If the filtering should be recursively applied
                              until all values are consistent. Default is True.
         :return: A filtered DataFrame.
         """
 
         col = df[filtering_col]
-        threshold = col.std() * filtering_factor
-        min_val, max_val = col.mean() - threshold, col.mean() + threshold
 
-        df2 = df[col.map(lambda z: min_val < z < max_val)]
+        df2 = df[filtering_f(col)]
 
         if is_recursive:
             # Check if all the values are consistent (no filtering would
@@ -130,6 +151,6 @@ class Utils(object):
                 return df2
             else:
                 return Utils.outlier_filtering(df2, filtering_col,
-                                               filtering_factor, is_recursive)
+                                               filtering_f, is_recursive)
         else:
             return df2
