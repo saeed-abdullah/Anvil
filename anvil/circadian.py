@@ -10,9 +10,10 @@
 """
 
 
-import pandas as pd
 import datetime
-
+import numpy as np
+import pandas as pd
+import scipy
 
 class CircadianAnalysis(object):
     """
@@ -318,3 +319,57 @@ class CircadianAnalysis(object):
             srm_df = pd.concat([srm_df, df_w], ignore_index=True)
 
         return srm_df
+
+
+class CosineCurveFitting(object):
+    """
+    Performs Cosine curve fitting.
+
+    Harmonic cosine analysis is often used to model Circadian
+    phenomenon. In particular, Vetter et al. [1] uses the following
+    equation to model alertness:
+
+    f(t) = a * sin(t/12 * π) + b * cos(t/12 * π) + C
+
+    This class performs cosine curve fitting along with error reporting
+    and plotting.
+
+    """
+
+    def __init__(self, df, y_col):
+        """
+        Initiates the class.
+
+        Parameters
+        ----------
+
+        df: DataFrame with `DateTimeIndex`.
+
+        y_col: Column name that would be used for fitting value (output).
+        """
+
+        raise NotImplemented
+
+    @staticmethod
+    def _get_formatted_df(df, y_col, bin_width_min=30):
+        """
+        Formats data for subsequent use.
+
+        This function ensures that X-Axis values are in hour scale.
+        """
+
+        raise NotImplemented
+
+    def perform_fit(self, p0=None):
+        return scipy.optimize.curve_fit(CosineCurveFitting._fit_function,
+                                        xdata=self.X, ydata=self.Y, p0=p0)
+
+    @staticmethod
+    def _fit_function(t, a, b):
+        """
+        Fit function to be used passed to curve_fit.
+
+        """
+
+        arg = t/12 * np.pi
+        return a * np.sin(arg) + b * np.cos(arg)
