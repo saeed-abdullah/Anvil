@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-    anvil.test.ciradian_test
-    ~~~~~~~~~~~~~~~~~~~~~~~~
+    anvil.test.utils_test
+    ~~~~~~~~~~~~~~~~~~~~~
 
-    Unit testing circadian module
+    Unit testing utils module
 
     :copyright: (c) 2015 by Saeed Abdullah.
 
 """
 
 from anvil import utils
+import datetime as dt
 from functools import partial
 import numpy as np
 import pandas as pd
@@ -68,3 +69,45 @@ class UtilsTest(unittest.TestCase):
                                       is_recursive=True)
         self.assertEquals(len(df2), 1)
         self.assertEquals(df2.x.min(), 250.0)
+
+    def test_get_hourly_distribution(self):
+        rng = pd.date_range('1/1/2011', periods=48, freq='H')
+        df = pd.DataFrame({'item': list(range(0, 48))}, index=rng)
+
+        func = lambda z: {'avg': z.item.mean(), 'max': z.item.max()}
+
+        r = utils.get_hourly_distribution(df, func)
+
+        self.assertEquals(len(r), 48)
+        # the first 24 values are for first date
+        self.assertEquals(np.unique(r['date'].values[:24]),
+                          [dt.date(2011, 1, 1)])
+
+        # the second 24 values are for next day
+        self.assertEquals(np.unique(r['date'].values[-24:]),
+                          [dt.date(2011, 1, 2)])
+
+        self.assertTrue(np.all(r.avg == r['max']))
+        self.assertTrue(np.all(r.avg.values == df.item.values))
+
+        # now repeat each value twice in a given hour
+
+        df = df.asfreq('30Min', method='bfill')
+
+        r = utils.get_hourly_distribution(df, func)
+
+        self.assertEquals(len(r), 48)
+        # the first 24 values are for first date
+        self.assertEquals(np.unique(r['date'].values[:24]),
+                          [dt.date(2011, 1, 1)])
+
+        # the second 24 values are for next day
+        self.assertEquals(np.unique(r['date'].values[-24:]),
+                          [dt.date(2011, 1, 2)])
+
+        # the values have been back filled. So, the difference
+        # is always 0.5 except for the last one.
+        diff = r['max'] - r.avg
+        expected = [0.5] * (len(diff) - 1)
+        expected.append(0)  # the last value is zero
+        self.assertTrue(np.all(np.isclose(diff, expected)))
