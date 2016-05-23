@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    anvil.misc
-    ~~~~~~~~~~
+    anvil.utils
+    ~~~~~~~~~~~
 
     Collection of miscellaneous utilities
 
@@ -185,7 +185,57 @@ def outlier_filtering(df, filtering_col,
         if len(df) == len(df2):
             return df2
         else:
-            return Utils.outlier_filtering(df2, filtering_col,
-                                           filtering_f, is_recursive)
+            return outlier_filtering(df2, filtering_col, filtering_f, is_recursive)
     else:
         return df2
+
+
+def get_hourly_distribution(df, func):
+    """
+    Computes hourly distribution across the days.
+
+    Parameters
+    ----------
+
+    df : DataFrame
+        DataFrame with `DateTimeIndex`.
+
+    func : function
+        Function used to compute hourly distribution. This
+        function should take a DataFrame as parameters and
+        return a dictionary. For example, given a DataFrame with
+        a column `steps`, if we are interested in the average and
+        minimum values of steps, then an example function would be:
+
+            def step_distribution(df):
+                return {'avg': df.steps.mean(),
+                        'minimum': df.steps.min()}
+
+        The keys of the returned dictionary are used to construct
+        the returned DataFrame. So, it should be consistent across
+        the calls. Since 'date' and 'hour' keys are already used,
+        this function should not use these keys.
+
+
+    Returns
+    -------
+    r : DataFrame
+        Returns a DataFrame with 'hour', 'date' and the keys of the
+        dictionary returned by `func` as columns.
+
+    Note
+    ----
+        The aggregating function should not use 'hour' and 'date'
+        as keys while returning the calculated dictionary.
+    """
+
+    l = []
+
+    for k, v in df.groupby(lambda z: z.date()):
+        for k1, v1 in v.groupby(lambda z: z.hour):
+            d = {'hour': k1, 'date': k}
+            d.update(func(v1))
+            l.append(d)
+
+    r = pd.DataFrame(l)
+    return r
