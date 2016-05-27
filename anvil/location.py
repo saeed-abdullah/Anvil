@@ -9,7 +9,7 @@
 
 """
 
-from geopy.distance import vincenty
+from geopy.distance import vincenty, great_circle
 import numpy as np
 import pandas as pd
 from scipy import spatial
@@ -25,7 +25,7 @@ Uses code from http://geoffboeing.com/2014/08/clustering-to-reduce-spatial-data-
 
 def do_location_clustering(df, eps=None, min_samples=None,
                            metric=None, lat_c='latitude',
-                           lon_c='longitude'):
+                           lon_c='longitude', distance_method='vincenty'):
     """
     Performs location based clustering.
 
@@ -53,6 +53,10 @@ def do_location_clustering(df, eps=None, min_samples=None,
     lon_c : str
         Column name for longitude data.
 
+    distance_method : str
+        Distance calculation method to use. The options are
+        'vincenty' or 'great_circle'.
+
     Returns
     -------
 
@@ -79,10 +83,19 @@ def do_location_clustering(df, eps=None, min_samples=None,
 
     c_matrix = df.as_matrix(columns=[lon_c, lat_c])
 
+    if distance_method == 'vincenty':
+        geodesic_distance = vincenty
+    elif distance_method == 'great_circle':
+        geodesic_distance = great_circle
+    else:
+        raise ValueError('Unknown distance method: {0}. Must be '
+                         'either vincenty or great_circle')
+
     # Pre-computed distance matrix where (i, j) entry
     # denotes the distance between point i and j in km.
     if metric is None:
-        v = spatial.distance.pdist(c_matrix, lambda x, y: vincenty(x, y).km)
+        v = spatial.distance.pdist(c_matrix,
+                                   lambda x, y: geodesic_distance(x, y).km)
         c_matrix = spatial.distance.squareform(v)
         metric = 'precomputed'
 
